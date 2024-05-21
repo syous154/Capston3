@@ -83,7 +83,9 @@ def human_parsing(frame, weights, rate, parts):
     
     frame = transform(frame)
     frame = frame.unsqueeze(0)
-    
+    class_of_interest =[]
+    for part in parts:
+        class_of_interest.append(label.index(part))
     
     with torch.no_grad():
 
@@ -95,7 +97,6 @@ def human_parsing(frame, weights, rate, parts):
         logits_result = transform_logits(upsample_output.data.cpu().numpy(), c, s, w, h, input_size=input_size)     ## 세그멘테이션 맵을 변환합니다. `transform_logits` 함수를 사용하여 세그멘테이션 맵을 입력 이미지와 동일한 크기로 변환합니다.
         parsing_result = np.argmax(logits_result, axis=2)       ## 로짓 결과에서 클래스에 대한 가장 높은 확률을 가진 인덱스를 가져와 세그멘테이션 결과를 얻습니다.
                                                                 ## parsing_result는 세그멘테이션 맵으로, 각 픽셀에 해당하는 클래스 인덱스를 담고 있는 2차원 배열입니다. 여기서 각 픽셀의 값은 클래스를 나타내는 정수 값입니다.
-        class_of_interest = [3,4,5,6]
 
         rate = 5           # 모자이크 처리에 사용할 축소 비율 (1 / rate)
         w = len(blur_frame[0])
