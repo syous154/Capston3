@@ -88,80 +88,34 @@ def human_parsing(frame, weights, rate, parts):
     with torch.no_grad():
 
         output = model(frame.cuda())   # output은 list 형태
-        
+        # cv2.imwrite('C:/Users/mohan/Python_files/LAB/Capstone/inference/output_frame.jpg',output)
+        # plt.imshow(output)
+        # print(f'output{output}')
         upsample = torch.nn.Upsample(size=input_size, mode='bilinear', align_corners=True)  ## 세그멘테이션 맵의 크기를 원래 크기로 업샘플링합니다. `torch.nn.Upsample`을 사용하여 bilinear 보간을 통해 업샘플링합니다. 
         upsample_output = upsample(output[0][-1][0].unsqueeze(0))
         upsample_output = upsample_output.squeeze()
         upsample_output = upsample_output.permute(1, 2, 0)  # CHW -> HWC
+        # cv2.imwrite('C:/Users/mohan/Python_files/LAB/Capstone/inference/output_upsample_frame.jpg',upsample_output)
 
         logits_result = transform_logits(upsample_output.data.cpu().numpy(), c, s, w, h, input_size=input_size)     ## 세그멘테이션 맵을 변환합니다. `transform_logits` 함수를 사용하여 세그멘테이션 맵을 입력 이미지와 동일한 크기로 변환합니다.
         parsing_result = np.argmax(logits_result, axis=2)       ## 로짓 결과에서 클래스에 대한 가장 높은 확률을 가진 인덱스를 가져와 세그멘테이션 결과를 얻습니다.
                                                                 ## parsing_result는 세그멘테이션 맵으로, 각 픽셀에 해당하는 클래스 인덱스를 담고 있는 2차원 배열입니다. 여기서 각 픽셀의 값은 클래스를 나타내는 정수 값입니다.
-        class_of_interest =[]
-        for part in parts:
-            class_of_interest.append(label.index(part))    
-        
-        
-        ## 해당 클래스의 행의 최저, 최대 값과 열의 최저, 최대 값을 구한구 box로 모자이크 처리를 진행 -> 팔 같은 경우 몸통까지 블러처리가 되기때문에 이를 해결해야함
-        
-        row_min = []
-        row_max = []
-        col_min = []
-        col_max = []
-        
-        ymin = len(original_frame)+1        # 몸통 부분을 식별 후 따로 저장하기 위해 사용
-        ymax = -1
-        xmin = len(original_frame[0] +1)
-        xmax = -1
-        
-        for i in range(len(class_of_interest)):
-            row_min.append(len(original_frame)+1)
-            row_max.append(-1)
-            col_min.append(len(original_frame[0])+1)
-            col_max.append(-1)
-        
-        for i in range(0, len(original_frame)):
-             for j in range(0, len(original_frame[0])):     
-                if parsing_result[i][j] in class_of_interest:
-                    idx = class_of_interest.index(parsing_result[i][j])
-                    if row_min[idx] > i:
-                        row_min[idx] = i
-                    if row_max[idx] < i:
-                        row_max[idx] = i
-                    if col_min[idx] > j:
-                        col_min[idx] = j
-                    if col_max[idx] < j:
-                        col_max[idx] = j
-                        
-                
-        
-        for i in range(len(class_of_interest)):
-            if row_min[i] != len(original_frame) + 1 and row_max[i] != -1 and col_min[i] != len(original_frame[0]) + 1 and col_max[i] != -1 and row_min[i] != row_max[i] and col_min[i] != col_max[i]:
-                    
-                frame_part = original_frame[ row_min[i] : row_max[i], col_min[i] : col_max[i]]
+        class_of_interest = [3,4,5,6]
 
-                h = row_max[i] - row_min[i]
-                w = col_max[i] - col_min[i]
+        rate = 5           # 모자이크 처리에 사용할 축소 비율 (1 / rate)
+        w = len(blur_frame[0])
+        h = len(blur_frame)
+        blur_frame = cv2.resize(blur_frame,(max(w // rate, 1), max(h // rate, 1))) # rate 비율을 사용해 축소
                 
-                frame_part = cv2.resize(frame_part,(max(w // rate, 1), max(h // rate, 1))) # rate(# 모자이크 처리에 사용할 축소 비율 (1 / rate)) 비율을 사용해 축소
+        blur_frame = cv2.resize(blur_frame, (w,h), interpolation=cv2.INTER_AREA)
                 
-                blur_frame_part = cv2.resize(frame_part, (w,h), interpolation=cv2.INTER_AREA)
-                
-                for p in range(row_min[i], row_max[i]):
-                    for q in range(col_min[i], col_max[i]):
-                        if parsing_result[p][q] == 2:       ## 파싱 결과가 몸통이라면
-                            if ymin > i :
-                                ymin = i
-                            if ymax < i:
-                                ymax = i
-                            if xmin > j:
-                                xmin = j
-                            if xmax < j:
-                                xmax = j
-                                
-                blur_frame[ row_min[i] : row_max[i], col_min[i] : col_max[i]] = blur_frame_part
-                blur_frame[ymin : ymax, xmin:xmax] = torso_frame[ymin : ymax, xmin : xmax]         ## 왜 안되냐.. 쓰벌..
-                
+        for i in range(len(blur_frame)):
+            for j in range(len(blur_frame[0])):
+                if parsing_result[i][j] in class_of_interest:
+                    continue
+                else:
+                    blur_frame[i][j] = original_frame[i][j]
+            
     return blur_frame
 
 
