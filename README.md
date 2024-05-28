@@ -4,7 +4,9 @@
 
 * 이번 모델에서 사용하는 가중치 파일 또한 Self-correction-Human-Parsing에서 제공하는 가중치 파일을 사용
 
-  * Pascal-Person-Part** ([exp-schp-201908270938-pascal-person-part.pth](https://drive.google.com/file/d/1E5YwNKW2VOEayK9mWCS3Kpsxf-3z04ZE/view?usp=sharing))
+  * Pascal-Person-Part ([exp-schp-201908270938-pascal-person-part.pth](https://drive.google.com/file/d/1E5YwNKW2VOEayK9mWCS3Kpsxf-3z04ZE/view?usp=sharing))
+
+    labels = [ 'Background', 'Head', 'Torso', 'Upper Arms', 'Lower Arms', 'Upper Legs', 'Lower Legs' ]
 
   * mIoU on Pascal-Person-Part validation: **71.46** %.
  
