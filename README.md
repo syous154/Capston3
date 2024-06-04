@@ -16,3 +16,12 @@
   ```
   python Yolo_Parsing_model.py --parts [원하는 부위] --weights exp-schp-201908270938-pascal-person-part.pth --rate [모자이크 강도] --input-video [input video 경로] --output-video [output-video 경로]
   ```
+
+
+## Web으로 실행하는 방법
+
+```
+ streamlit run app.py
+```
+위 코드를 실행하면 로컬로 웹 사이트를 열림. 원한다면 streamlit내 기능을 통해 배포까지도 가능
+웹 사이트가 열리면 동영상 파일을 업로드 후 모자이크할 신체부위 모자이크 강도를 선택하면 동영상을 처리 후 다운로드 가능
